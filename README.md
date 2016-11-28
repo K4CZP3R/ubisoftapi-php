@@ -1,6 +1,9 @@
 # Ubisoft-Uplay-API-PHP
 Uplay API written in PHP
 
+
+OUTDATED
+
 It is just proof of concept
 
 # Installation
