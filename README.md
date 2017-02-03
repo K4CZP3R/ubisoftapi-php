@@ -1,8 +1,7 @@
 # Ubisoft-Uplay-API-PHP
 Uplay API written in PHP
 
-
-OUTDATED
+Last Updated: 3rd Feb 2017
 
 It is just proof of concept
 
@@ -14,37 +13,16 @@ It is just proof of concept
 
 3.Write into index.php:
 ```php
-include("uAPI.php");
-$ubi=new uapi("username or email","password",false);
+<?php
+include("ubiapi.php");
+
+$apiUplay = new ubiapi("email","password",null);
+// or you can use new ubiapi(null,null,"here b64 of email:password")
+$apiUplay->login();
+print $apiUplay->searchUser("byid","id of user",true);
+print $apiUplay->searchUser("bynick","nick of user,true);
+print $apiUplay->getFriends(true);
+?>
 ```
 4.You are ready to go!
-
-# Examples
-
-! Before every example you'll need to write
-```php
-include("uAPI.php");
-$ubi=new uapi("username or email","password",false);
-```
-
-- Refresh authstr to make api always available
-```php
-$resp=$ubi->verifykey("uplay id","expected nickname of uplay id");
-if($resp["error"]){
-	$resp=$ubi->login();
-	if($resp["error"]){
-		die("Can't access Uplay API right now");
-	}
-}
-```
-
-- Get ID of Selected nickname
-```php
-$resp=$ubi->simpleusersearch(0,"Nickname");
-if($resp["error"]){
-	die("Can't lookup nickname");
-}
-else{
-	echo $resp["data"];
-}
-```
+!. After using function login() you don't need to repeat it (for some time..)
