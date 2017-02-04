@@ -2,35 +2,98 @@
 /**
  * @author Kacper Serewis (k4czp3r.dev@gmail.com)
  * @copyright 2017
- * @version 2.0.0.0
- * Updated at 03-Feb-2017
+ * @version 2.0.1.0
+ * github.com/K4CZP3R
+ * Updated at 04-Feb-2017
  */
+
 class ubiapi{
 	private $b64authcreds;
 	public $http_useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36";
 	public $http_encoding="gzip";
-	public $debug=false;
+	public $debug=true;
 
-	public function debugReport($content){
+    /**
+     * @param string $location - From which function is this message executed
+     * @param string $content - Content of debug message
+     * @param string $color - Background Color of message
+     */
+	public function debugReport($location,$content,$color){
+		$color_array = array("red"=>"E57373","green"=>"4DB6AC","blue"=>"4FC3F7","grey"=>"E0E0E0");
 		if($this->debug){
-			print date("h:i:s")." - ".$content."<br>";
+			print '<span style="background:#'.$color_array[$color].';text-align:center;">'.date("h:i:s").' - ['.$location.' ] - '.$content.'</span><br>';
 		}
 	}
-	public function generateB64Creds($emailandpassword){
-		$this->debugReport("B64: ".base64_encode($emailandpassword));
+
+    /**
+     * @param string $emailandpassword - email:password
+     * @return string - email:password in b64
+     */
+    public function generateB64Creds($emailandpassword){
+		$this->debugReport(__FUNCTION__,"B64: ".base64_encode($emailandpassword),"grey");
 		return base64_encode($emailandpassword);
 	}
+
+    /**
+     * ubiapi constructor.
+     * You can use email and password OR already encoded b64 string
+     * If you gonna use encoded string, enter 'null' in other places
+     * @param string $credsemail Uplay Account Email
+     * @param string $credspass Uplay Account Password
+     * @param string $credsb64 B64 Encoded string (email:password)
+     */
 	function __construct($credsemail,$credspass,$credsb64){
 		if($credspass == null && $credsb64 != null){
-			$this->debugReport("Using b64 string to login");
+			$this->debugReport(__FUNCTION__,"Using b64 string to login","green");
 			$this->b64authcreds=$credsb64;
 		}
 		else{
-			$this->debugReport("Using creds to login");
+			$this->debugReport(__FUNCTION__,"Using creds to login","green");
 			$this->b64authcreds=$this->generateB64Creds($credsemail.":".$credspass);
 		}
 	}
-	public function searchUser($mode,$content,$returnRaw){
+
+    /**
+     * If you gonna use this API on website, it is smart to use this.
+     * Ubisoft is going to temp ban your account if you gonna login every time you refresh page.
+     * And this function logins only when its needed (see examples on my github.com/K4CZP3R
+     *
+     * @param string $searchWith How to search (bynick,byid)
+     * @param string $userToCheck What to search (id,nick)
+     * @return array error,content
+     */
+	public function refreshTicket($searchWith,$userToCheck){
+		$this->debugReport("begin ".__FUNCTION__,"Checking if ubi gonna return normal answer","green");
+		$firstResponse = $this->searchUser($searchWith,$userToCheck);
+		if($firstResponse["error"]){
+			$this->debugReport(__FUNCTION__,"strike1, ubi returned null. Trying to refresh ticket","red");
+			$this->login();
+			$this->debugReport(__FUNCTION__,"Checking if after logging in, ubi will return normal answer","grey");
+			$secondResponse=$this->searchUser($searchWith,$userToCheck);
+			if($secondResponse["error"]){
+				$this->debugReport(__FUNCTION__,"strike2, ubi returned null","red");
+				return array("error"=>true,
+					"content"=>"After logging in still empty response!");
+			}
+			else{
+				$this->debugReport(__FUNCTION__,"Success! Ubi returned normal answer!","green");
+				return array("error"=>false,
+					"content"=>"Ticket has been refreshed");
+			}
+		}
+		else{
+			$this->debugReport(__FUNCTION__,"Ticket is still up-to-date","green");
+			return array("error"=>false,
+				"content"=>"No action has been taken, ticket up-to-date");
+		}
+	}
+
+    /**
+     * @param string|int $mode 1-bynick, 2-byid
+     * @param string $content id or nick you want to search
+     * @return array raw-raw answer from ubi, json-array formated json, nick- nickname, uid- user id
+     */
+	public function searchUser($mode,$content){
 		$prefixUrl = "https://api-ubiservices.ubi.com/v2/profiles?";
 		if($mode == 1 || $mode == "bynick"){
 			$request_url = $prefixUrl."nameOnPlatform=".$content."&platformType=uplay";
@@ -38,7 +101,7 @@ class ubiapi{
 		if($mode == 2 || $mode == "byid"){
 			$request_url = $prefixUrl."profileId=".$content;
 		}
-		$this->debugReport("Request URL: ".$request_url);
+		$this->debugReport(__FUNCTION__,"Request URL: ".$request_url,"grey");
 		$request_header_ubiappid = "314d4fef-e568-454a-ae06-43e3bece12a6";
 		$request_header_ubisessionid = "a651a618-bead-4732-b929-4a9488a21d27";
 		$ch = curl_init();
@@ -60,31 +123,41 @@ class ubiapi{
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		$ubioutput = curl_exec($ch);
 		curl_close($ch);
-
+		$orginaloutput=$ubioutput;
+		
 		if($this->http_encoding == "gzip"){
 			$ubioutput = gzdecode($ubioutput);
 		}
-		$this->debugReport("Executed request (to see it, uncomment log line)");
-		$this->debugReport($ubioutput);
+		$this->debugReport(__FUNCTION__,"Executed request (to see it, uncomment log line)","blue");
+		$this->debugReport(__FUNCTION__,$ubioutput,"grey");
 
 		//idk why but sometimes gzdecoded returns null
 		if(empty($ubioutput)){
-			$this->debugReport("After making use of ".$this->http_encoding. "decode, string is empty, using orginal one...");
-			$ubioutput=$orginaloutput;}
-		if($returnRaw){
-			return $ubioutput;
+			$this->debugReport(__FUNCTION__,"After making use of ".$this->http_encoding. "decode, string is empty, using orginal one...","red");
+			$ubioutput=$orginaloutput;
+			if(empty($ubioutput)){
+			return array("error"=>true,
+				"content"=>"Ubi Response is empty!");
 		}
-		else{
-			return json_decode($ubioutput,true);
 		}
 
+		$jsonoutput = json_decode($ubioutput,true);
+		return array("error"=>false,
+			"raw"=>$ubioutput,
+			"json"=>$jsonoutput,
+			"nick"=>$jsonoutput['profiles'][0]['nameOnPlatform'],
+			"uid"=>$jsonoutput['profiles'][0]['profileId']);
+		
 	}
-	//if $returnRaw == false then it'll return array
-	public function getFriends($returnRaw){
-		$this->debugReport("Going to return friends array/json");
+
+    /**
+     * @return array raw-raw answer from ubi, json-array formated json
+     */
+	public function getFriends(){
+		$this->debugReport(__FUNCTION__,"Going to return friends array/json","green");
 		$request_url = "https://api-ubiservices.ubi.com/v2/profiles/me/friends?locale=en-US";
 		$request_header_ubiappid = "314d4fef-e568-454a-ae06-43e3bece12a6";
-		$request_header_ubisessionid= "a651a618-bead-4732-b929-4a9488a21d27"; //todo: check generation of it
+		$request_header_ubisessionid= "a651a618-bead-4732-b929-4a9488a21d27";
 
 		$ch=curl_init();
 		curl_setopt($ch, CURLOPT_URL,$request_url);
@@ -106,23 +179,28 @@ class ubiapi{
 		curl_close($ch);
 		//after testing i dont see reason to include gzdecoding here, if you want to, do it
 
-		$this->debugReport("Request Executed (to see it, uncomment next line)");
-		//$this->debugReport($ubioutput);
+		$this->debugReport(__FUNCTION__,"Request Executed (to see it, uncomment next line)","blue");
+		//$this->debugReport(__FUNCTION__,$ubioutput,"grey");
 
-		if($returnRaw){
-			return $ubioutput;
+		if(empty($ubioutput)){
+			return array("error"=>true,
+				"content"=>"Ubisoft response is empty!");
 		}
-		else{
-			return json_decode($ubioutput,true);
-		}
-		
+		return array("error"=>false,
+			"raw"=>$ubioutput,
+			"json"=>json_decode($ubioutput,true));
 	}
+
+    /**
+     * @return array returns true when ticket updated (or not)
+     * todo: catch errors
+     */
 	public function login(){
-		$this->debugReport("Going to login...");
+		$this->debugReport(__FUNCTION__,"Going to login...","green");
 		$request_url = "https://connect.ubi.com/ubiservices/v2/profiles/sessions";
 		$request_header_ubiappid="314d4fef-e568-454a-ae06-43e3bece12a6";
 		$request_header_authbasic=$this->b64authcreds;
-		$this->debugReport("<br>url:".$request_url."<br>appid:".$request_header_ubiappid."<br>authbasic:".$request_header_authbasic);
+		$this->debugReport(__FUNCTION__,"<br>url:".$request_url."<br>appid:".$request_header_ubiappid."<br>authbasic:".$request_header_authbasic,"grey");
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $request_url);
@@ -141,7 +219,7 @@ class ubiapi{
 		"Accept-Encoding: ".$this->http_encoding,
 		"User-Agent: ".$this->http_useragent,
 		"Host: connect.ubi.com",
-		"Content-Lenght: 19", //change this when you are changing CURLOPT_POSTFIELDS
+		"Content-Lenght: 19", //change this when you are changing CURLOPT_POSTFIELDS!!!!
 		"Cache-Control: no-cache",
 		];
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -151,26 +229,45 @@ class ubiapi{
 		if($this->http_encoding == "gzip"){
 			$ubioutput = gzdecode($ubioutput);
 		}
-		$this->debugReport("Executed request (to see it, uncomment log line)");
-		//$this->debugReport($ubioutput);
+		$this->debugReport(__FUNCTION__,"Executed request (to see it, uncomment log line)","blue");
+		//$this->debugReport(__FUNCTION__,__FUNCTION__,$ubioutput,"grey");
 
-		//idk why but sometimes gzdecoded returns null
+		//idk why but sometimes gzdecoded returns null todo: check it
 		if(empty($ubioutput)){
-			$this->debugReport("After making use of ".$this->http_encoding. "decode, string is empty, using orginal one...");
+			$this->debugReport(__FUNCTION__,"After making use of ".$this->http_encoding. "decode, string is empty, using orginal one...","red");
 			$ubioutput=$orginaloutput;}
 
 		$json = json_decode($ubioutput,true);
-		$this->debugReport("Your authstring (to see it, uncomment next line of code)");
+		$this->debugReport(__FUNCTION__,"Your authstring (to see it, uncomment next line of code)","green");
 		//$this->debugReport($json['ticket']);
-		$this->debugReport("Welcome, ".$json['username']);
-		$this->debugReport("Your UserId is ".$json['userId']);
-		$this->debugReport("You can ignore last function for saving authstring but you'll need to edit some lines of codes to disable it");
+
+		$this->debugReport(__FUNCTION__,"Welcome, ".$json['username'],"green");
+		$this->debugReport(__FUNCTION__,"Your UserId is ".$json['userId'],"green");
+		$this->debugReport(__FUNCTION__,"You can ignore last function for saving authstring but you'll need to edit some lines of codes to disable it","grey");
+
+
+		$test_beforeSave=$this->uplayticket(false);
 		$this->uplayticket(true,$json['ticket']);
+		$test_afterSave=$this->uplayticket(false);
+		$test_fileUpdated=false;
+		if($test_beforeSave != $test_afterSave){
+			$test_fileUpdated=true;
+		}
+
+		return array("error"=>false,
+			"content"=>"Ticket Updated? (1==true):".$test_fileUpdated);
+
 
 	}
+
+    /**
+     * @param bool $save when false, returns ticket otherwise saves ticket
+     * @param string $ticket when $save is true, this will be ticket to save
+     * @return string Ticket
+     */
 	public function uplayticket($save,$ticket=""){
 		if($save){
-			$this->debugReport("Saving ticket...");
+			$this->debugReport(__FUNCTION__,"Saving ticket","green");
 			$file_ticket = fopen("api_ticket","w") or die("Can't open ticket file");
 			try{
 				fwrite($file_ticket, $ticket);
@@ -181,7 +278,7 @@ class ubiapi{
 			}
 		}
 		else{
-			$this->debugReport("Gonna return formated ticket");
+			$this->debugReport(__FUNCTION__,"Returning Ticket","green");
 			$prefix = "Ubi_v1 t=";
 			$ticket_file = fopen("api_ticket","r") or die("Can't open ticket file");
 			$ticket = fgets($ticket_file);
