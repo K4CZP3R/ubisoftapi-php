@@ -11,12 +11,14 @@ To use this API you'll just need to copy ticket_file and uAPI.php
 ### Examples
 
 First of all, you'll need to include api
-```
+```php
+<?php
 include("uAPI.php");
+?>
 ```
 
 Login and update Ticket in ticket_file
-```
+```php
 <?php
 include("uAPI.php");
 $uapi = new ubiapi("email","password",null);
@@ -26,7 +28,7 @@ print $apianswer["error"]; //when 0 - everything is good!
 ```
 
 Update Ticket (no need to login everytime, without this function you can get banned)
-```
+```php
 <?php
 ...
 //include api and define it as $uapi
@@ -41,7 +43,7 @@ else{
 
 
 Get friendlist
-```
+```php
 <?php
 ...
 //include api, define it as $uapi and update ticket
@@ -52,7 +54,7 @@ if($fl["error"] != true){ //small check if api response is vaild
 ```
 
 Get Nickname using profileId
-```
+```php
 <?php
 ...
 //include api, define it as $uapi (and update ticket [refreshTicket])
@@ -63,7 +65,7 @@ if($su["error"] != true){
 ```
 
 Get profileId using Nickname
-```
+```php
 <?php
 ...
 //include api, define it as $uapi (and update ticket [refreshTicket])
