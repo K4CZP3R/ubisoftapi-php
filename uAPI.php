@@ -2,7 +2,7 @@
 /**
  * @author Kacper Serewis (k4czp3r.dev@gmail.com)
  * @copyright 2017
- * @version 2.0.1.0
+ * @version 2.0.1.1
  * github.com/K4CZP3R
  * Updated at 04-Feb-2017
  */
@@ -30,7 +30,8 @@ class ubiapi{
      * @return string - email:password in b64
      */
     public function generateB64Creds($emailandpassword){
-		$this->debugReport(__FUNCTION__,"B64: ".base64_encode($emailandpassword),"grey");
+		$this->debugReport(__FUNCTION__,"B64: <hidden> uncomment line below to see this","grey");
+		//$this->debugReport(__FUNCTION__,"B64: ".base64_encode($emailandpassword),"grey");
 		return base64_encode($emailandpassword);
 	}
 
