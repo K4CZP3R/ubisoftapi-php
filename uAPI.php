@@ -2,9 +2,9 @@
 /**
  * @author Kacper Serewis (k4czp3r.dev@gmail.com)
  * @copyright 2017
- * @version 2.0.1.1
+ * @version 2.0.1.2
  * github.com/K4CZP3R
- * Updated at 04-Feb-2017
+ * Updated at 01-Mar-2017
  */
 
 class ubiapi{
@@ -193,10 +193,11 @@ class ubiapi{
 	}
 
     /**
+     * @param int $showraw outputs (1) raw response or (2) raw decoded response
      * @return array returns true when ticket updated (or not)
      * todo: catch errors
      */
-	public function login(){
+	public function login($showraw){
 		$this->debugReport(__FUNCTION__,"Going to login...","green");
 		$request_url = "https://connect.ubi.com/ubiservices/v2/profiles/sessions";
 		$request_header_ubiappid="314d4fef-e568-454a-ae06-43e3bece12a6";
@@ -229,6 +230,12 @@ class ubiapi{
 		curl_close($ch);
 		if($this->http_encoding == "gzip"){
 			$ubioutput = gzdecode($ubioutput);
+		}
+		if($showraw == 1){
+			$this->debugReport(__FUNCTION__,"Raw response (not decoded):<br>".$orginaloutput."<br>","blue");
+		}
+		if($showraw == 2){
+			$this->debugReport(__FUNCTION__,"Raw Response (decoded):<br>".$ubioutput."<br>","blue");
 		}
 		$this->debugReport(__FUNCTION__,"Executed request (to see it, uncomment log line)","blue");
 		//$this->debugReport(__FUNCTION__,__FUNCTION__,$ubioutput,"grey");
