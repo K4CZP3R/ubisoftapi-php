@@ -1,8 +1,9 @@
 # Ubisoft-Uplay-API-PHP
 
 API based on https requests to Ubisoft servers. It's just proof of concept.
+API DOESN'T WORK FOR NOW, Request needs "Ubi-Challenge" header
 
-Last Update: 4th Feb 2017
+Last Update: 1st Mar 2017 (Doesn't Work)
 
 ### Downloading
 
@@ -22,7 +23,7 @@ Login and update Ticket in ticket_file
 <?php
 include("uAPI.php");
 $uapi = new ubiapi("email","password",null);
-$apianswer=$uapi->login();
+$apianswer=$uapi->login(1); //1 for raw, 2 for decoded raw
 print $apianswer["error"]; //when 0 - everything is good!
 ?>
 ```
