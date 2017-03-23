@@ -2,9 +2,9 @@
 
 API based on https requests to Ubisoft servers. It's just proof of concept.
 
-API DOESN'T WORK FOR NOW, Request needs "Ubi-Challenge" header
+After logging in too ofter, "i'm not robot" challenge will be required.
 
-Last Update: 1st Mar 2017 (Doesn't Work)
+Last Update: 1st Mar 2017 (I'm not robot challenge problem)
 
 ### Downloading
 
