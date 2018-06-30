@@ -1,10 +1,12 @@
 # Ubisoft-Uplay-API-PHP
 
-API based on https requests to Ubisoft servers. It's just proof of concept.
+* API based on https requests to Ubisoft servers. It's just proof of concept.
 
-After logging in too ofter, "i'm not robot" challenge will be required.
+* If you will login too often, google captcha will be forced. There's no support of it
 
-Last Update: 1st Mar 2017 (I'm not robot challenge problem)
+* Last Update: 1st Mar 2017
+
+* Use this only as reference, this code is not well designed and outdated (it'll probably work)!
 
 ### Downloading
 
